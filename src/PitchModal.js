@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { PITCH_INDEX_TO_COLOR } from './Constants';
 import { useDataContext } from './DataProvider';
 import spinAxisIcon from './static/spin-axis-icon.png'
-import releaseDirectionIcon from './static/release-direction-icon.png'
+import releaseAngleIcon from './static/release-angle-icon.png'
 
 const PitchModal = ({ index }) => {
     const {data, setData} = useDataContext();
@@ -30,6 +30,12 @@ const PitchModal = ({ index }) => {
     const onSpinRateChange = (e) => {
         const dataCopy = {...data};
         dataCopy['pitchDatas'][index]['spinRate'] = Number(e.target.value);
+        setData(dataCopy);
+    };
+
+    const onActiveSpinChange = (e) => {
+        const dataCopy = {...data};
+        dataCopy['pitchDatas'][index]['activeSpin'] = Number(e.target.value);
         setData(dataCopy);
     };
 
@@ -94,21 +100,32 @@ const PitchModal = ({ index }) => {
                             <h5>{`${pitchData['spinAxis']}°`}</h5>
                         </td>
                         <td style={{display: 'flex', justifyContent: 'center'}}>
-                            <div style={{height: '4vw', margin: '10px 0', aspectRatio: 5/4}}>    
+                            <div style={{height: '4vw', margin: 0, aspectRatio: 5/4}}>    
                                 <SpinAxisModal data={data} setData={setData} index={index}/>
                             </div>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <h5>Release Direction</h5>
+                            <h5>Active Spin</h5>
                         </td>
                         <td>
-                            <h5>{`x: ${pitchData['releaseDirection'][0]}°`}<br></br>{`y: ${pitchData['releaseDirection'][1]}°`}</h5>
+                            <h5>{`${pitchData['activeSpin']}%`}</h5>
+                        </td>
+                        <td>
+                            <input type='range' min={0} max={100} step={1} defaultValue={pitchData['activeSpin']} onChange={onActiveSpinChange} style={{width: '95%'}}></input>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <h5>Release Angle</h5>
+                        </td>
+                        <td>
+                            <h5>{`x: ${pitchData['releaseAngle'][0]}°`}<br></br>{`y: ${pitchData['releaseAngle'][1]}°`}</h5>
                         </td>
                         <td style={{display: 'flex', justifyContent: 'center'}}>
                             <div style={{height: '5vw', margin: 0, aspectRatio: 1}}>
-                                <ReleaseDirectionModal data={data} setData={setData} index={index}/>
+                                <ReleaseAngleModal data={data} setData={setData} index={index}/>
                             </div>
                         </td>
                     </tr>
@@ -154,33 +171,46 @@ const SpinAxisModal = ({ data, setData, index }) => {
     );
 };
 
-const ReleaseDirectionModal = ({ data, setData, index }) => {
+const ReleaseAngleModal = ({ data, setData, index }) => {
     const pitchData = data['pitchDatas'][index];
-    const onReleaseDirectionChange = (e) => {
+    const onReleaseAngleChange = (e) => {
         const input = e.target;
         const dataCopy = {...data};
-        if (input.className === 'release-direction-x') {
-            dataCopy['pitchDatas'][index]['releaseDirection'][0] = Number(e.target.value);
+        if (input.className === 'release-angle-x') {
+            dataCopy['pitchDatas'][index]['releaseAngle'][0] = Number(e.target.value);
         } else {
-            dataCopy['pitchDatas'][index]['releaseDirection'][1] = Number(e.target.value);
+            dataCopy['pitchDatas'][index]['releaseAngle'][1] = Number(e.target.value);
         }
         setData(dataCopy);
     };
 
+    useEffect(() => {
+        const xSlider = document.getElementById(`release-angle-x-${index}`);
+        const ySlider = document.getElementById(`release-angle-y-${index}`);
+        xSlider.focus();
+        xSlider.value += 0.1;
+        xSlider.value -= 0.1;
+        xSlider.blur();
+        ySlider.focus();
+        ySlider.value += 0.1;
+        ySlider.value -= 0.1;
+        xSlider.blur();
+    }, []);
+
     return (
         <div style={{height: '100%', width: '100%'}}>
             <div style={{height: '80%', width: '100%', display: 'flex'}}>
-                <div style={{height: '100%', width: '80%', transform: `rotateX(${40 - data['pitchDatas'][index]['releaseDirection'][1] * 5}deg) rotateZ(${data['pitchDatas'][index]['releaseDirection'][0] * 5}deg)`}}>
-                    <img style={{height: '100%', width: '100%', }} src={releaseDirectionIcon} alt='releaseDirectionIcon'></img>
+                <div style={{height: '100%', width: '80%', transform: `rotateX(${40 - data['pitchDatas'][index]['releaseAngle'][1] * 5}deg) rotateZ(${data['pitchDatas'][index]['releaseAngle'][0] * 5}deg)`}}>
+                    <img style={{height: '100%', width: '100%', }} src={releaseAngleIcon} alt='releaseAngleIcon'></img>
                 </div>
                 <div style={{height: '100%', width: '20%'}}>
                     <div style={{height: '20%', width: '400%', transform: 'rotate(270deg)', transformOrigin: 'top left', marginTop: '400%', marginLeft: '-30%'}}>
-                        <input className='release-direction-y' type='range' min={-5} max={5} step={0.1} defaultValue={pitchData['releaseDirection'][0]} onChange={onReleaseDirectionChange} style={{width: '95%'}}></input>
+                        <input id={`release-angle-y-${index}`} className='release-angle-y' type='range' min={-5} max={5} step={0.1} defaultValue={pitchData['releaseAngle'][0]} onChange={onReleaseAngleChange} style={{width: '95%'}}></input>
                     </div>
                 </div>
             </div>
             <div style={{height: '20%', width: '80%', display: 'flex'}}>
-                <input className='release-direction-x' type='range' min={-5} max={5} step={0.1} defaultValue={pitchData['releaseDirection'][1]} onChange={onReleaseDirectionChange} style={{width: '95%'}}></input> 
+                <input id={`release-angle-x-${index}`} className='release-angle-x' type='range' min={-5} max={5} step={0.1} defaultValue={pitchData['releaseAngle'][1]} onChange={onReleaseAngleChange} style={{width: '95%'}}></input> 
             </div>
         </div>
     );

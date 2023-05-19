@@ -8,7 +8,7 @@ const useDataContext = () => {
 
 const DataProvider = ({ children }) => {
     const [data, setData] = useState({pitchDatas: [
-        {velocity: 100, spinRate: 2300, spinAxis: 180, releaseDirection: [0, 0], pitchType: '4-Seam Fastball'},
+        {velocity: 100, spinRate: 2300, spinAxis: 180, activeSpin: 100, releaseAngle: [0, 0], pitchType: '4-Seam Fastball'},
     ]});
     
     return (

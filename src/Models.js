@@ -120,17 +120,11 @@ const BaseballModel = ({ posX, posY, posZ }) => {
 const PitchPathModel = ({ index, posX, posY, posZ }) => {
     const {data} = useDataContext();
     const [currPosX, currPosY, currPosZ, pathCurve] = useMemo(() => {
-        const initialVelocity = data['pitchDatas'][index]['velocity'] * 1.609344 * 1000 / 3600;
-        const airResistanceAcceleration = AIR_RESISTANCE_CONSTANT * Math.pow(initialVelocity, 2) / BASEBALL_MASS;
-        const a = airResistanceAcceleration * -1;
-        const b = 2 * initialVelocity;
-        const c = 2 * HOME_PLATE_REAR_TO_RELEASE_POINT * -1;
-        const timeToReachHomePlateRear = Math.min(...quadraticSolver(a, b, c));
-        if (timeToReachHomePlateRear <= 0) {
-            alert('Error: Some calculation went wrong');
-        }
-        const endVelocity = initialVelocity - airResistanceAcceleration * timeToReachHomePlateRear;
-        const averageVelocity = (initialVelocity + endVelocity) / 2
+        const [velocityX, velocityY, velocityZ] = getXYZComponents(data['pitchDatas'][index]['velocity'] * 1.609344 * 1000 / 3600, data['pitchDatas'][index]['releaseAngle'][0], data['pitchDatas'][index]['releaseAngle'][1]);
+        const averageVelocityZ = getAverageVelocityFromDistance(velocityZ, HOME_PLATE_REAR_TO_RELEASE_POINT);
+        const timeToReachHomePlateRear = HOME_PLATE_REAR_TO_RELEASE_POINT / averageVelocityZ;
+        const averageVelocityY = getAverageVelocityFromTime(velocityY, timeToReachHomePlateRear);
+        const averageVelocityX = getAverageVelocityFromTime(velocityX, timeToReachHomePlateRear) * -1;
         
         let currPosX = posX;
         let currPosY = posY;
@@ -139,8 +133,10 @@ const PitchPathModel = ({ index, posX, posY, posZ }) => {
         const NUM_PATH_POINTS = 10;
         // const temp = [[currPosX, currPosY, currPosZ]];
         for (let i = 1; i < NUM_PATH_POINTS + 1; i ++) {
-            currPosX -= averageVelocity * timeToReachHomePlateRear / NUM_PATH_POINTS;
-            currPosY = posY - GRAVITY_ACCELERATION * Math.pow(timeToReachHomePlateRear / NUM_PATH_POINTS * i, 2) / 2;
+            const t = timeToReachHomePlateRear / NUM_PATH_POINTS * i;
+            currPosX = posX - averageVelocityZ * t;
+            currPosY = posY + averageVelocityY * t - GRAVITY_ACCELERATION * Math.pow(t, 2) / 2;
+            currPosZ = posZ + averageVelocityX * t;
             if (i === NUM_PATH_POINTS) {
                 currPosX = posX - HOME_PLATE_REAR_TO_RELEASE_POINT;
             }
@@ -150,10 +146,6 @@ const PitchPathModel = ({ index, posX, posY, posZ }) => {
         const pathCurve = new THREE.CatmullRomCurve3(pathPoints);
         return [currPosX, currPosY, currPosZ, pathCurve];
     }, [data, posX, posY, posZ]);
-
-    useEffect(() => {
-        console.log("rerendered");
-    }, [data]);
 
     return (
         <>
@@ -170,9 +162,39 @@ const PitchPathModel = ({ index, posX, posY, posZ }) => {
     );
 };
 
-const quadraticSolver = (a, b, c) => {
+const getQuadraticSolutions = (a, b, c) => {
     const discriminantRooted = Math.sqrt(Math.pow(b, 2) - (4 * a * c));
     return [(-b + discriminantRooted) / (2 * a), (-b - discriminantRooted) / (2 * a)];
+}
+
+const getXYZComponents = (magnitude, xAngle, yAngle) => {
+    const xzPlaneProjection = magnitude * Math.cos(yAngle * Math.PI / 180);
+    const yzPlaneProjection = magnitude * Math.cos(xAngle * Math.PI / 180);
+    const xComponent = xzPlaneProjection * Math.sin(xAngle * Math.PI / 180);
+    const yComponent = yzPlaneProjection * Math.sin(yAngle * Math.PI / 180);
+    const zComponent = xzPlaneProjection * Math.cos(xAngle * Math.PI / 180);
+    return [xComponent, yComponent, zComponent];
+}
+
+const getAverageVelocityFromDistance = (initialVelocity, distance) => {
+    const airResistanceAcceleration = AIR_RESISTANCE_CONSTANT * Math.pow(initialVelocity, 2) / BASEBALL_MASS;
+    const a = airResistanceAcceleration * -1;
+    const b = 2 * initialVelocity;
+    const c = 2 * distance * -1;
+    const timeToReachDistance = Math.min(...getQuadraticSolutions(a, b, c));
+    if (timeToReachDistance < 0) {
+        alert('Error: Some calculation went wrong');
+    }
+    const endVelocity = initialVelocity - airResistanceAcceleration * timeToReachDistance;
+    const averageVelocity = (initialVelocity + endVelocity) / 2
+    return averageVelocity;
+}
+
+const getAverageVelocityFromTime = (initialVelocity, time) => {
+    const airResistanceAcceleration = AIR_RESISTANCE_CONSTANT * Math.pow(initialVelocity, 2) / BASEBALL_MASS;
+    const endVelocity = initialVelocity - airResistanceAcceleration * time;
+    const averageVelocity = (initialVelocity + endVelocity) / 2
+    return averageVelocity;
 }
 
 export { StrikeZoneModel, HomePlateModel, MoundModel, PitchPathModel, BaseballModel };
