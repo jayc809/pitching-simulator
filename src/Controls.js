@@ -7,7 +7,7 @@ const Controls = () => {
 
     const onAddPitchClick = () => {
         const dataCopy = {...data};
-        dataCopy['pitchDatas'].push({velocity: 100, spinRate: 2300, spinAxis: 180, activeSpin: 100, releaseAngle: [0, 0], pitchType: '4-Seam Fastball'});
+        dataCopy['pitchDatas'].push({velocity: 100, spinRate: 2300, spinAxis: 180, activeSpin: 100, releaseAngle: [0, 0], pitchType: '4SB'});
         setData(dataCopy);
     };
 

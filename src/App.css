@@ -7,7 +7,24 @@ h5 {
     margin: 10px;
 }
 
+h5:hover {
+    cursor: default;
+}
+
 button:hover {
+    cursor: pointer;
+}
+
+img {
+    user-drag: none;
+    -webkit-user-drag: none;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+select:hover {
     cursor: pointer;
 }
 

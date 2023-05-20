@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { PITCH_INDEX_TO_COLOR } from './Constants';
+import { PITCH_ACRONYM_TO_NAME, PITCH_INDEX_TO_COLOR } from './Constants';
 import { useDataContext } from './DataProvider';
 import spinAxisIcon from './static/spin-axis-icon.png'
 import releaseAngleIcon from './static/release-angle-icon.png'
@@ -134,10 +134,32 @@ const PitchModal = ({ index }) => {
                             <h5>Pitch Type</h5>
                         </td>
                         <td>
-                            <h5>{pitchData['pitchType']}</h5>
+                            <h5>{PITCH_ACRONYM_TO_NAME[pitchData['pitchType']]}</h5>
                         </td>
                         <td>
-                            <input type='text' style={{width: '90%'}} onBlur={onPitchTypeBlur} onChange={onPitchTypeChange} placeholder='Type here'></input>
+                            <select onChange={onPitchTypeChange} defaultValue={data['pitchDatas'][index]['pitchType']}>
+                                <option value='4SB'>4SB</option>
+                                <option value='2SB'>2SB</option>
+                                <option value='CUT'>CUT</option>
+                                <option value='SNK'>SNK</option>
+                                <option value='SPL'>SPL</option>
+                                <option value='FRK'>FRK</option>
+                                <option value='GYR'>GYR</option>
+                                <option value='SHT'>SHT</option>
+                                <option value='SLD'>SLD</option>
+                                <option value='SWP'>SWP</option>
+                                <option value='SLV'>SLV</option>
+                                <option value='CRV'>CRV</option>
+                                <option value='12-6'>12-6</option>
+                                <option value='K-CRV'>K-CRV</option>
+                                <option value='SCR'>SCR</option>
+                                <option value='CHG'>CHG</option>
+                                <option value='CIR'>CIR</option>
+                                <option value='VUL'>VUL</option>
+                                <option value='K-CHG'>K-CHG</option>
+                                <option value='PLM'>PLM</option>
+                                <option value='KNU'>KNU</option>
+                            </select>
                         </td>
                     </tr>
                 </tbody>

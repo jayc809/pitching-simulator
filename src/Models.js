@@ -121,8 +121,8 @@ const PitchPathModel = ({ index, posX, posY, posZ }) => {
     const {data} = useDataContext();
     const [currPosX, currPosY, currPosZ, pathCurve] = useMemo(() => {
         const [velocityX, velocityY, velocityZ] = getXYZComponents(data['pitchDatas'][index]['velocity'] * 1.609344 * 1000 / 3600, data['pitchDatas'][index]['releaseAngle'][0], data['pitchDatas'][index]['releaseAngle'][1]);
-        const averageVelocityZ = getAverageVelocityFromDistance(velocityZ, HOME_PLATE_REAR_TO_RELEASE_POINT);
-        const timeToReachHomePlateRear = HOME_PLATE_REAR_TO_RELEASE_POINT / averageVelocityZ;
+        const averageVelocityZ = getAverageVelocityFromDistance(velocityZ, HOME_PLATE_REAR_TO_RELEASE_POINT) * -1;
+        const timeToReachHomePlateRear = HOME_PLATE_REAR_TO_RELEASE_POINT / Math.abs(averageVelocityZ);
         const averageVelocityY = getAverageVelocityFromTime(velocityY, timeToReachHomePlateRear);
         const averageVelocityX = getAverageVelocityFromTime(velocityX, timeToReachHomePlateRear) * -1;
         
@@ -134,12 +134,9 @@ const PitchPathModel = ({ index, posX, posY, posZ }) => {
         // const temp = [[currPosX, currPosY, currPosZ]];
         for (let i = 1; i < NUM_PATH_POINTS + 1; i ++) {
             const t = timeToReachHomePlateRear / NUM_PATH_POINTS * i;
-            currPosX = posX - averageVelocityZ * t;
+            currPosX = posX + averageVelocityZ * t;
             currPosY = posY + averageVelocityY * t - GRAVITY_ACCELERATION * Math.pow(t, 2) / 2;
             currPosZ = posZ + averageVelocityX * t;
-            if (i === NUM_PATH_POINTS) {
-                currPosX = posX - HOME_PLATE_REAR_TO_RELEASE_POINT;
-            }
             pathPoints.push(new THREE.Vector3(currPosX, currPosY, currPosZ));
             // temp.push([currPosX, currPosY, currPosZ]);
         }

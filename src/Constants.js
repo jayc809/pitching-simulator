@@ -40,3 +40,27 @@ export const PITCH_INDEX_TO_COLOR = {
     9: 'deepSkyBlue'
 };
 
+export const PITCH_ACRONYM_TO_NAME = {
+    '4SB': '4-Seam Fastball',
+    '2SB': '2-Seam Fastball',
+    'CUT': 'Cutter',
+    'SNK': 'Sinker',
+    'SPL': 'Splitter',
+    'FRK': 'Forkball',
+    'GYR': 'Gyroball',
+    'SHT': 'Shootball',
+    'SLD': 'Slider',
+    'SWP': 'Sweeper',
+    'SLV': 'Slurve',
+    'CRV': 'Curveball',
+    '12-6': '12-6 Curve',
+    'K-CRV': 'Knuckle Curve',
+    'SCR': 'Screwball',
+    'CHG': 'Changeup',
+    'CIR': 'Circle Change',
+    'VUL': 'Vulcan Change',
+    'K-CHG': 'Knuckle Change',
+    'PLM': 'Palmball',
+    'KNU': 'Knuckleball'
+}
+
