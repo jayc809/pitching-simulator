@@ -11,6 +11,9 @@ const Controls = () => {
         dataCopy['pitchDatas'].push({...PITCH_TYPE_TO_BASE_DATA['4SB'], isDefault: false});
         dataCopy['pitchDataChanged'] = dataCopy['pitchDatas'].length - 1;
         setData(dataCopy);
+        setTimeout(() => {
+            document.getElementById(`pitch-modal-${dataCopy['pitchDatas'].length - 1}`).scrollIntoView();
+        }, 500);
     };
 
     return (

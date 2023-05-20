@@ -133,7 +133,7 @@ const PitchPathModel = ({ index, posX, posY, posZ }) => {
         let prevPosZ = null;
         
         let loopCounter = 0;
-        while (currPosX > posX - HOME_PLATE_REAR_TO_RELEASE_POINT) {
+        while (currPosX > posX - HOME_PLATE_REAR_TO_RELEASE_POINT + HOME_PLATE_HEIGHT) {
             if (loopCounter > 300) {
                 alert("Error: Too many loops");
                 break;
@@ -168,26 +168,20 @@ const PitchPathModel = ({ index, posX, posY, posZ }) => {
             timeElapsed += timeDelta;
             loopCounter += 1;
         }
+        // const val = Math.pow(currVelocityX, 2) + Math.pow(currVelocityY, 2) + Math.pow(currVelocityZ, 2);
+        // if (index == 1) console.log(Math.sqrt(val) / 1000 * 3600 / 1.609344)
 
         // fix last point
-        const ratio = (prevPosX - (posX - HOME_PLATE_REAR_TO_RELEASE_POINT)) / (prevPosX - currPosX);
-        currPosX = prevPosX + (currVelocityX > 0 ? 1 : -1) * ratio * (prevPosX - currPosX);
-        currPosY = prevPosY + (currVelocityY > 0 ? 1 : -1) * ratio * (prevPosY - currPosY);
-        currPosZ = prevPosZ + (currVelocityZ > 0 ? 1 : -1) * ratio * (prevPosZ - currPosZ);
+        const ratio = (prevPosX - (posX - HOME_PLATE_REAR_TO_RELEASE_POINT + HOME_PLATE_HEIGHT)) / (prevPosX - currPosX);
+        currPosX = prevPosX + (currVelocityX > 0 ? 1 : -1) * ratio * Math.abs(Math.abs(prevPosX) - Math.abs(currPosX));
+        currPosY = prevPosY + (currVelocityY > 0 ? 1 : -1) * ratio * Math.abs(Math.abs(prevPosY) - Math.abs(currPosY));
+        currPosZ = prevPosZ + (currVelocityZ > 0 ? 1 : -1) * ratio * Math.abs(Math.abs(prevPosZ) - Math.abs(currPosZ));
         pathPoints[pathPoints.length - 1] = new THREE.Vector3(currPosX, currPosY, currPosZ);
         timeElapsed -= timeDelta * (1 - ratio);
 
         const dataCopy = {...data};
-        if (currPosZ > posZ) {
-            data['pitchDatas'][index]['horizontalBreak'] = Math.round((currPosZ - posZ) * 1000 / 2.54) / 10 * -1
-        } else {
-            data['pitchDatas'][index]['horizontalBreak'] = Math.round((posZ - currPosZ) * 1000 / 2.54) / 10
-        }
-        if (currPosY > posY) {
-            data['pitchDatas'][index]['verticalBreak'] = Math.round((currPosY - posY) * 1000 / 2.54) / 10 * -1
-        } else {
-            data['pitchDatas'][index]['verticalBreak'] = Math.round((posY - currPosY) * 1000 / 2.54) / 10
-        }
+        data['pitchDatas'][index]['horizontalBreak'] = Math.round((currPosZ - posZ) * 1000 / 2.54) / 10;
+        data['pitchDatas'][index]['verticalBreak'] = Math.round((currPosY - posY) * 1000 / 2.54) / 10;
         data['pitchDatas'][index]['hitterReactionTIme'] = Math.round((timeElapsed - 0.2) * 1000) / 1000;
         data['pitchDatas'][index]['rating'] = 'TBD';
 

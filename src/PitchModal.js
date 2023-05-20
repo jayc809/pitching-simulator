@@ -4,17 +4,15 @@ import { useDataContext } from './DataProvider';
 import spinAxisIcon from './static/spin-axis-icon.png'
 import releaseAngleIcon from './static/release-angle-icon.png'
 
-const PitchModal = ({ index }) => {
+const PitchModal = ({ index, onFirstRender }) => {
     const {data, setData} = useDataContext();
     const pitchData = data['pitchDatas'][index];
     const [refresh, setRefresh] = useState(0);
 
     useEffect(() => {
         if (data['pitchDatas'][index]['isDefault']) {
-            document.getElementById(`pitch-modal-0`).scrollIntoView();
-        } else if (index === data['pitchDataChanged']) {
-            document.getElementById(`pitch-modal-${index}`).scrollIntoView();
-        };
+            document.getElementById('pitch-modal-0').scrollIntoView();
+        }
     }, []);
 
     const onDeleteClick = () => {
@@ -50,7 +48,6 @@ const PitchModal = ({ index }) => {
         dataCopy['pitchDatas'][index] = {...PITCH_TYPE_TO_BASE_DATA[e.target.value], isDefault: false};
         dataCopy['pitchDataChanged'] = index;
         setData(dataCopy);
-        setRefresh(refresh + 1);
     }
 
     const onMouseEnter = () => {
