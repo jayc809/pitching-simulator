@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { PITCH_ACRONYM_TO_NAME, PITCH_INDEX_TO_COLOR } from './Constants';
+import React, { useEffect, useState } from 'react';
+import { PITCH_TYPE_TO_NAME, PITCH_TYPE_TO_COLOR, PITCH_TYPE_TO_BASE_DATA } from './Constants';
 import { useDataContext } from './DataProvider';
 import spinAxisIcon from './static/spin-axis-icon.png'
 import releaseAngleIcon from './static/release-angle-icon.png'
@@ -7,11 +7,13 @@ import releaseAngleIcon from './static/release-angle-icon.png'
 const PitchModal = ({ index }) => {
     const {data, setData} = useDataContext();
     const pitchData = data['pitchDatas'][index];
+    const [refresh, setRefresh] = useState(0);
 
     useEffect(() => {
-        if (index === data['pitchDatas'].length - 1) {
-            const pitchModal = document.getElementById(`pitch-modal-${index}`);
-            pitchModal.scrollIntoView();
+        if (data['pitchDatas'][index]['isDefault']) {
+            document.getElementById(`pitch-modal-0`).scrollIntoView();
+        } else if (index === data['pitchDataChanged']) {
+            document.getElementById(`pitch-modal-${index}`).scrollIntoView();
         };
     }, []);
 
@@ -45,13 +47,27 @@ const PitchModal = ({ index }) => {
 
     const onPitchTypeChange = (e) => {
         const dataCopy = {...data};
-        dataCopy['pitchDatas'][index]['pitchType'] = e.target.value;
+        dataCopy['pitchDatas'][index] = {...PITCH_TYPE_TO_BASE_DATA[e.target.value], isDefault: false};
         dataCopy['pitchDataChanged'] = index;
+        setData(dataCopy);
+        setRefresh(refresh + 1);
+    }
+
+    const onMouseEnter = () => {
+        const dataCopy = {...data};
+        dataCopy['pitchDataChanged'] = index;
+        dataCopy['pitchDataSelected'] = index;
+        setData(dataCopy);
+    }
+
+    const onMouseLeave = () => {
+        const dataCopy = {...data};
+        dataCopy['pitchDataSelected'] = -1;
         setData(dataCopy);
     }
 
     return (
-        <div id={`pitch-modal-${index}`} style={{width: '100%'}}>
+        <div key={refresh} id={`pitch-modal-${index}`} style={{width: '100%'}} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
             {
                 index === 0 ? 
                 <></> : 
@@ -59,7 +75,7 @@ const PitchModal = ({ index }) => {
             }
             <div style={{width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>    
                 <div style={{width: '25%', display: 'flex', justifyContent: 'right'}}>
-                    <div style={{height: '12px', aspectRatio: 1, backgroundColor: PITCH_INDEX_TO_COLOR[index]}}></div>
+                    <div style={{height: '12px', aspectRatio: 1, backgroundColor: PITCH_TYPE_TO_COLOR[data['pitchDatas'][index]['pitchType']]}}></div>
                 </div>
                 <div>
                     <h3 style={{margin: 'auto'}}>{`Pitch ${index + 1}`}</h3>
@@ -71,6 +87,39 @@ const PitchModal = ({ index }) => {
             <br></br>
             <table style={{margin: 'auto', borderSpacing: '0'}}>
                 <tbody>
+                <tr>
+                        <td>
+                            <h5>Pitch Type</h5>
+                        </td>
+                        <td>
+                            <h5>{PITCH_TYPE_TO_NAME[pitchData['pitchType']]}</h5>
+                        </td>
+                        <td>
+                            <select onChange={onPitchTypeChange} defaultValue={data['pitchDatas'][index]['pitchType']}>
+                                <option value='4SB'>4SB</option>
+                                <option value='2SB'>2SB</option>
+                                <option value='CUT'>CUT</option>
+                                <option value='SPL'>SPL</option>
+                                <option value='FRK'>FRK</option>
+                                <option value='SNK'>SNK</option>
+                                <option value='GYR'>GYR</option>
+                                <option value='SHT'>SHT</option>
+                                <option value='SLD'>SLD</option>
+                                <option value='SWP'>SWP</option>
+                                <option value='SLV'>SLV</option>
+                                <option value='CRV'>CRV</option>
+                                <option value='12-6'>12-6</option>
+                                <option value='K-CRV'>K-CRV</option>
+                                <option value='SCR'>SCR</option>
+                                <option value='CHG'>CHG</option>
+                                <option value='CIR'>CIR</option>
+                                <option value='VUL'>VUL</option>
+                                <option value='K-CHG'>K-CHG</option>
+                                <option value='PLM'>PLM</option>
+                                <option value='KNU'>KNU</option>
+                            </select>
+                        </td>
+                    </tr>
                     <tr>
                         <td>
                             <h5>Velocity</h5>
@@ -128,39 +177,6 @@ const PitchModal = ({ index }) => {
                             <div style={{height: '5vw', margin: 0, aspectRatio: 1}}>
                                 <ReleaseAngleModal data={data} setData={setData} index={index}/>
                             </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <h5>Pitch Type</h5>
-                        </td>
-                        <td>
-                            <h5>{PITCH_ACRONYM_TO_NAME[pitchData['pitchType']]}</h5>
-                        </td>
-                        <td>
-                            <select onChange={onPitchTypeChange} defaultValue={data['pitchDatas'][index]['pitchType']}>
-                                <option value='4SB'>4SB</option>
-                                <option value='2SB'>2SB</option>
-                                <option value='CUT'>CUT</option>
-                                <option value='SNK'>SNK</option>
-                                <option value='SPL'>SPL</option>
-                                <option value='FRK'>FRK</option>
-                                <option value='GYR'>GYR</option>
-                                <option value='SHT'>SHT</option>
-                                <option value='SLD'>SLD</option>
-                                <option value='SWP'>SWP</option>
-                                <option value='SLV'>SLV</option>
-                                <option value='CRV'>CRV</option>
-                                <option value='12-6'>12-6</option>
-                                <option value='K-CRV'>K-CRV</option>
-                                <option value='SCR'>SCR</option>
-                                <option value='CHG'>CHG</option>
-                                <option value='CIR'>CIR</option>
-                                <option value='VUL'>VUL</option>
-                                <option value='K-CHG'>K-CHG</option>
-                                <option value='PLM'>PLM</option>
-                                <option value='KNU'>KNU</option>
-                            </select>
                         </td>
                     </tr>
                 </tbody>

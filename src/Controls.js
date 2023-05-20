@@ -1,19 +1,16 @@
 import React from 'react';
 import { useDataContext } from './DataProvider';
 import PitchModal from './PitchModal';
+import { PITCH_TYPE_TO_BASE_DATA } from './Constants';
 
 const Controls = () => {
     const {data, setData} = useDataContext();
 
     const onAddPitchClick = () => {
         const dataCopy = {...data};
-        dataCopy['pitchDatas'].push({velocity: 100, spinRate: 2300, spinAxis: 180, activeSpin: 100, releaseAngle: [0, 0], pitchType: '4SB'});
+        dataCopy['pitchDatas'].push({...PITCH_TYPE_TO_BASE_DATA['4SB'], isDefault: false});
         dataCopy['pitchDataChanged'] = dataCopy['pitchDatas'].length - 1;
         setData(dataCopy);
-    };
-
-    const onSettingsClick = () => {
-
     };
 
     return (
@@ -27,8 +24,7 @@ const Controls = () => {
             </div>
             <div style={{height: '10%', width: '100%'}}>
                 <div style={{height: '100%', width: '100%', display: 'flex', justifyContent: 'space-evenly', alignItems: 'center'}}>
-                    <button onClick={onAddPitchClick} style={{color: 'white', backgroundColor: 'black', border: '1px solid white', borderRadius: '5px', padding: '10px'}}>Add Pitch</button> 
-                    <button onClick={onSettingsClick} style={{color: 'white', backgroundColor: 'black', border: '1px solid white', borderRadius: '5px', padding: '10px'}}>Settings</button> 
+                    <button onClick={onAddPitchClick} style={{color: 'white', backgroundColor: 'black', border: '1px solid white', borderRadius: '5px', padding: '10px'}}>Add Pitch</button>
                 </div>
             </div>
         </div>
