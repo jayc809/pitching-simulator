@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Edges } from '@react-three/drei';
 import { HOME_PLATE_HEIGHT, HOME_PLATE_RECTANGLE_HEIGHT, HOME_PLATE_THICKNESS, HOME_PLATE_WIDTH, PITCHERS_PLATE_TO_MOUND_REAR_FRONT, MOUND_LENGTH, MOUND_REAR_HEIGHT, MOUND_REAR_LENGTH, MOUND_REAR_WIDTH, PITCHERS_PLATE_HEIGHT, PITCHERS_PLATE_THICKNESS, PITCHERS_PLATE_WIDTH, STRIKE_ZONE_HEIGHT, STRIKE_ZONE_THICKNESS, HOME_PLATE_REAR_TO_RELEASE_POINT, BASEBALL_RADIUS, GRAVITY_ACCELERATION, PITCH_INDEX_TO_COLOR, AIR_RESISTANCE_CONSTANT, BASEBALL_MASS } from './Constants';
 import * as THREE from 'three';
@@ -119,12 +119,19 @@ const BaseballModel = ({ posX, posY, posZ }) => {
 
 const PitchPathModel = ({ index, posX, posY, posZ }) => {
     const {data} = useDataContext();
-    const [currPosX, currPosY, currPosZ, pathCurve] = useMemo(() => {
-        const [velocityX, velocityY, velocityZ] = getXYZComponents(data['pitchDatas'][index]['velocity'] * 1.609344 * 1000 / 3600, data['pitchDatas'][index]['releaseAngle'][0], data['pitchDatas'][index]['releaseAngle'][1]);
-        const averageVelocityZ = getAverageVelocityFromDistance(velocityZ, HOME_PLATE_REAR_TO_RELEASE_POINT) * -1;
+
+    const [endPos, setEndPos] = useState([]);
+    const [pathCurve, setPathCurve] = useState(null);
+
+    useEffect(() => {
+        if (data['pitchDataChanged'] !== index && data['pitchDataChanged'] !== -1) return;
+
+        const [initialVelocityX, initialVelocityY, initialVelocityZ] = getXYZComponents(data['pitchDatas'][index]['velocity'] * 1.609344 * 1000 / 3600, data['pitchDatas'][index]['releaseAngle'][0], data['pitchDatas'][index]['releaseAngle'][1]);
+
+        const averageVelocityZ = getAverageVelocityFromDistance(initialVelocityZ, HOME_PLATE_REAR_TO_RELEASE_POINT) * -1;
         const timeToReachHomePlateRear = HOME_PLATE_REAR_TO_RELEASE_POINT / Math.abs(averageVelocityZ);
-        const averageVelocityY = getAverageVelocityFromTime(velocityY, timeToReachHomePlateRear);
-        const averageVelocityX = getAverageVelocityFromTime(velocityX, timeToReachHomePlateRear) * -1;
+        const averageVelocityY = getAverageVelocityFromTime(initialVelocityY, timeToReachHomePlateRear);
+        const averageVelocityX = getAverageVelocityFromTime(initialVelocityX, timeToReachHomePlateRear) * -1;
         
         let currPosX = posX;
         let currPosY = posY;
@@ -140,17 +147,20 @@ const PitchPathModel = ({ index, posX, posY, posZ }) => {
             pathPoints.push(new THREE.Vector3(currPosX, currPosY, currPosZ));
             // temp.push([currPosX, currPosY, currPosZ]);
         }
-        const pathCurve = new THREE.CatmullRomCurve3(pathPoints);
-        return [currPosX, currPosY, currPosZ, pathCurve];
+        setEndPos([currPosX, currPosY, currPosZ]);
+        setPathCurve(new THREE.CatmullRomCurve3(pathPoints));
     }, [data, posX, posY, posZ]);
 
+    if (pathCurve === null) {
+        return (<></>);
+    }
     return (
         <>
             <mesh>
                 <tubeGeometry args={[pathCurve, 64, BASEBALL_RADIUS * 0.8, 20, false]}/>
                 <meshPhongMaterial color={PITCH_INDEX_TO_COLOR[index]} opacity={0.5} transparent={true} depthWrite={false}/>
             </mesh>
-            <BaseballModel posX={currPosX} posY={currPosY} posZ={currPosZ}/>
+            <BaseballModel posX={endPos[0]} posY={endPos[1]} posZ={endPos[2]}/>
             <BaseballModel posX={posX} posY={posY} posZ={posZ}/>
             {/* {
                 temp.map(pos => {return <BaseballModel posX={pos[0]} posY={pos[1]} posZ={pos[2]}/>})

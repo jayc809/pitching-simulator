@@ -6,7 +6,7 @@ import { HOME_PLATE_REAR_TO_MOUND_REAR, HOME_PLATE_HEIGHT, GROUND_OFFSET, TOTAL_
 import { useDataContext } from './DataProvider';
 
 const ModelCanvas = () => {
-    const {data, setData} = useDataContext();
+    const {data} = useDataContext();
     
     const cameraPosition = [HOME_PLATE_REAR_TO_MOUND_REAR * 0.17 * -1, STRIKE_ZONE_HEIGHT * 0.4, HOME_PLATE_REAR_TO_MOUND_REAR * 0.1];
     const cameraOffsetX = HOME_PLATE_REAR_TO_MOUND_REAR * 0.4;

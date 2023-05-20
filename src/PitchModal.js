@@ -18,35 +18,36 @@ const PitchModal = ({ index }) => {
     const onDeleteClick = () => {
         const dataCopy = {...data};
         dataCopy['pitchDatas'].splice(index, 1);
+        dataCopy['pitchDataChanged'] = -1;
         setData(dataCopy);
     };
 
     const onVelocityChange = (e) => {
         const dataCopy = {...data};
         dataCopy['pitchDatas'][index]['velocity'] = Number(e.target.value);
+        dataCopy['pitchDataChanged'] = index;
         setData(dataCopy);
     };
 
     const onSpinRateChange = (e) => {
         const dataCopy = {...data};
         dataCopy['pitchDatas'][index]['spinRate'] = Number(e.target.value);
+        dataCopy['pitchDataChanged'] = index;
         setData(dataCopy);
     };
 
     const onActiveSpinChange = (e) => {
         const dataCopy = {...data};
         dataCopy['pitchDatas'][index]['activeSpin'] = Number(e.target.value);
+        dataCopy['pitchDataChanged'] = index;
         setData(dataCopy);
     };
 
     const onPitchTypeChange = (e) => {
         const dataCopy = {...data};
         dataCopy['pitchDatas'][index]['pitchType'] = e.target.value;
+        dataCopy['pitchDataChanged'] = index;
         setData(dataCopy);
-    }
-
-    const onPitchTypeBlur = (e) => {
-        e.target.value = '';
     }
 
     return (
@@ -174,6 +175,7 @@ const SpinAxisModal = ({ data, setData, index }) => {
     const onSpinAxisChange = (e) => {
         const dataCopy = {...data};
         dataCopy['pitchDatas'][index]['spinAxis'] = Number(e.target.value);
+        dataCopy['pitchDataChanged'] = index;
         setData(dataCopy);
     };
 
@@ -203,6 +205,7 @@ const ReleaseAngleModal = ({ data, setData, index }) => {
         } else {
             dataCopy['pitchDatas'][index]['releaseAngle'][1] = Number(e.target.value);
         }
+        dataCopy['pitchDataChanged'] = index;
         setData(dataCopy);
     };
 

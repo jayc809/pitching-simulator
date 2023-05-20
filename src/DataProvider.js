@@ -7,9 +7,12 @@ const useDataContext = () => {
 }
 
 const DataProvider = ({ children }) => {
-    const [data, setData] = useState({pitchDatas: [
-        {velocity: 100, spinRate: 2300, spinAxis: 180, activeSpin: 100, releaseAngle: [0, 0], pitchType: '4SB'},
-    ]});
+    const [data, setData] = useState({
+        pitchDatas: [
+            {velocity: 100, spinRate: 2300, spinAxis: 180, activeSpin: 100, releaseAngle: [0, 0], pitchType: '4SB'},
+        ],
+        pitchDataChanged: 0
+    });
     
     return (
         <DataContext.Provider value={{data, setData}}>
