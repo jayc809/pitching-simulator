@@ -1,13 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { PITCH_TYPE_TO_NAME, PITCH_TYPE_TO_COLOR, PITCH_TYPE_TO_BASE_DATA } from './Constants';
 import { useDataContext } from './DataProvider';
 import spinAxisIcon from './static/spin-axis-icon.png'
 import releaseAngleIcon from './static/release-angle-icon.png'
 
-const PitchModal = ({ index, onFirstRender }) => {
+const PitchModal = ({ index }) => {
     const {data, setData} = useDataContext();
     const pitchData = data['pitchDatas'][index];
-    const [refresh, setRefresh] = useState(0);
 
     useEffect(() => {
         if (data['pitchDatas'][index]['isDefault']) {
@@ -64,7 +63,7 @@ const PitchModal = ({ index, onFirstRender }) => {
     }
 
     return (
-        <div key={refresh} id={`pitch-modal-${index}`} style={{width: '100%'}} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+        <div id={`pitch-modal-${index}`} style={{width: '100%'}} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
             {
                 index === 0 ? 
                 <></> : 

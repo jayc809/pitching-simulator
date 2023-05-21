@@ -23,7 +23,7 @@ export const BASEBALL_MASS = 145.5 / 1000;
 export const BASEBALL_CROSS_SECTION = Math.PI * Math.pow(BASEBALL_RADIUS, 2)
 export const GRAVITY_ACCELERATION = 9.8067;
 export const RELEASE_HEIGHT = 72 * 2.54 / 100;
-export const AIR_DENSITY = 1.192;
+export const AIR_DENSITY = 1.3;
 export const AIR_DRAG_COEFFICIENT = 0.3401;
 export const AIR_RESISTANCE_CONSTANT = AIR_DENSITY * AIR_DRAG_COEFFICIENT * BASEBALL_CROSS_SECTION / 2;
 export const RADIANS_PER_SECOND_TO_RPM = 0.10472;
@@ -67,7 +67,7 @@ export const PITCH_TYPE_TO_COLOR = {
     'CRV': '#00FC6B',
     '12-6': '#00FC35',
     'K-CRV': '#2EFC00',
-    'SCR': '#FC9900',
+    'SCR': '#A0FC00',
     'CHG': '#FCE900',
     'CIR': '#FCFC00',
     'VUL': '#EDFC00',
@@ -96,16 +96,40 @@ export const PITCH_TYPE_TO_BASE_DATA = {
     'CIR': {velocity: 83, spinRate: 1750, spinAxis: 270, activeSpin: 70, releaseAngle: [0, 0], pitchType: 'CIR'},
     'VUL': {velocity: 83, spinRate: 1500, spinAxis: 240, activeSpin: 70, releaseAngle: [0, 0], pitchType: 'VUL'},
     'K-CHG': {velocity: 73, spinRate: 1650, spinAxis: 240, activeSpin: 5, releaseAngle: [0, 0], pitchType: 'K-CHG'},
-    'PLM': {velocity: 68, spinRate: 1250, spinAxis: 0, activeSpin: 10, releaseAngle: [0, 0], pitchType: 'PLM'},
+    'PLM': {velocity: 70, spinRate: 1250, spinAxis: 180, activeSpin: 30, releaseAngle: [0, 0], pitchType: 'PLM'},
     'KNU': {velocity: 65, spinRate: 600, spinAxis: 180, activeSpin: 0, releaseAngle: [0, 0], pitchType: 'KNU'}
 }
+
+export const PITCH_TYPE_TO_MAGNUS_EFFECT_FACTOR = {
+    '4SB': [1, 1],
+    '2SB': [1.3, 1],
+    'CUT': [0.75, 0.8],
+    'SPL': [1.3, 1],
+    'FRK': [1.25, 1],
+    'SNK': [1.3, 1.1],
+    'GYR': [1, 1],
+    'SHT': [1.2, 1.2],
+    'SLD': [1, 1],
+    'SWP': [1.5, 1],
+    'SLV': [1.4, 0.85],
+    'CRV': [1.3, 1],
+    '12-6': [1, 1.1],
+    'K-CRV': [1, 1],
+    'SCR': [1.25, 1.15],
+    'CHG': [1.9, 1.5],
+    'CIR': [1.5, 1],
+    'VUL': [0.9, 1],
+    'K-CHG': [1.1, 1.1],
+    'PLM': [1, 1.1],
+    'KNU': [0, 0]
+};
 
 export const DEFAULT_DATA = {
     pitchDatas: [
         {...PITCH_TYPE_TO_BASE_DATA['4SB'], isDefault: true},
-        {...PITCH_TYPE_TO_BASE_DATA['SNK'], isDefault: true},
+        {...PITCH_TYPE_TO_BASE_DATA['CHG'], isDefault: true},
         {...PITCH_TYPE_TO_BASE_DATA['SWP'], isDefault: true},
-        {...PITCH_TYPE_TO_BASE_DATA['CRV'], isDefault: true}
+        {...PITCH_TYPE_TO_BASE_DATA['CRV'], isDefault: true},
     ],
     pitchDataChanged: -1,
     pitchDataSelected: -1

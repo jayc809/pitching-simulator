@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Edges } from '@react-three/drei';
-import { HOME_PLATE_HEIGHT, HOME_PLATE_RECTANGLE_HEIGHT, HOME_PLATE_THICKNESS, HOME_PLATE_WIDTH, PITCHERS_PLATE_TO_MOUND_REAR_FRONT, MOUND_LENGTH, MOUND_REAR_HEIGHT, MOUND_REAR_LENGTH, MOUND_REAR_WIDTH, PITCHERS_PLATE_HEIGHT, PITCHERS_PLATE_THICKNESS, PITCHERS_PLATE_WIDTH, STRIKE_ZONE_HEIGHT, STRIKE_ZONE_THICKNESS, HOME_PLATE_REAR_TO_RELEASE_POINT, BASEBALL_RADIUS, GRAVITY_ACCELERATION, PITCH_TYPE_TO_COLOR, AIR_RESISTANCE_CONSTANT, BASEBALL_MASS, RADIANS_PER_SECOND_TO_RPM, AIR_DENSITY, BASEBALL_CROSS_SECTION } from './Constants';
+import { HOME_PLATE_HEIGHT, HOME_PLATE_RECTANGLE_HEIGHT, HOME_PLATE_THICKNESS, HOME_PLATE_WIDTH, PITCHERS_PLATE_TO_MOUND_REAR_FRONT, MOUND_LENGTH, MOUND_REAR_HEIGHT, MOUND_REAR_LENGTH, MOUND_REAR_WIDTH, PITCHERS_PLATE_HEIGHT, PITCHERS_PLATE_THICKNESS, PITCHERS_PLATE_WIDTH, STRIKE_ZONE_HEIGHT, STRIKE_ZONE_THICKNESS, HOME_PLATE_REAR_TO_RELEASE_POINT, BASEBALL_RADIUS, GRAVITY_ACCELERATION, PITCH_TYPE_TO_COLOR, AIR_RESISTANCE_CONSTANT, BASEBALL_MASS, RADIANS_PER_SECOND_TO_RPM, AIR_DENSITY, BASEBALL_CROSS_SECTION, PITCH_TYPE_TO_MAGNUS_EFFECT_FACTOR } from './Constants';
 import * as THREE from 'three';
 import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 import { useDataContext } from './DataProvider';
@@ -113,8 +113,8 @@ const PitchPathModel = ({ index, posX, posY, posZ }) => {
         if (data['pitchDataChanged'] !== index && data['pitchDataChanged'] !== -1) return;
 
         const releaseVelocity = data['pitchDatas'][index]['velocity'] * 1.609344 * 1000 / 3600;
-        const releaseAngleX = data['pitchDatas'][index]['releaseAngle'][0];
-        const releaseAngleY = data['pitchDatas'][index]['releaseAngle'][1];
+        const releaseAngleX = data['pitchDatas'][index]['releaseAngle'][0] * Math.PI / 180;
+        const releaseAngleY = data['pitchDatas'][index]['releaseAngle'][1] * Math.PI / 180;
         const spinAxis = (data['pitchDatas'][index]['spinAxis'] + 270) * Math.PI / 180;
         const [initialVelocityZ, initialVelocityY, initialVelocityX] = getXYZComponents(releaseVelocity, releaseAngleX, releaseAngleY);
         const activeSpinRate = data['pitchDatas'][index]['spinRate'] * data['pitchDatas'][index]['activeSpin'] / 100 * RADIANS_PER_SECOND_TO_RPM;
@@ -148,10 +148,10 @@ const PitchPathModel = ({ index, posX, posY, posZ }) => {
 
             // magnus effect
             const currVelocity = Math.sqrt(Math.pow(currVelocityX, 2) + Math.pow(currVelocityY, 2) + Math.pow(currVelocityZ, 2));
-            const magnusCoefficient = 0.319 * (1 - Math.pow(Math.E, -0.00248 * activeSpinRate));
+            const magnusCoefficient = 0.358 * (1 - Math.pow(Math.E, -0.00248 * activeSpinRate));
             const magnusAcceleration = 1 / 2 * AIR_DENSITY * BASEBALL_CROSS_SECTION * magnusCoefficient * Math.pow(currVelocity, 2) / BASEBALL_MASS;
-            const magnusAccelerationZComponent = magnusAcceleration * Math.cos(spinAxis);
-            const magnusAccelerationYComponent = magnusAcceleration * Math.sin(spinAxis);
+            const magnusAccelerationZComponent = magnusAcceleration * Math.cos(spinAxis) * PITCH_TYPE_TO_MAGNUS_EFFECT_FACTOR[data['pitchDatas'][index]['pitchType']][0];
+            const magnusAccelerationYComponent = magnusAcceleration * Math.sin(spinAxis) * PITCH_TYPE_TO_MAGNUS_EFFECT_FACTOR[data['pitchDatas'][index]['pitchType']][1];
             currVelocityY += magnusAccelerationYComponent * timeDelta;
             currVelocityZ += magnusAccelerationZComponent * timeDelta;
 
@@ -168,8 +168,6 @@ const PitchPathModel = ({ index, posX, posY, posZ }) => {
             timeElapsed += timeDelta;
             loopCounter += 1;
         }
-        // const val = Math.pow(currVelocityX, 2) + Math.pow(currVelocityY, 2) + Math.pow(currVelocityZ, 2);
-        // if (index == 1) console.log(Math.sqrt(val) / 1000 * 3600 / 1.609344)
 
         // fix last point
         const ratio = (prevPosX - (posX - HOME_PLATE_REAR_TO_RELEASE_POINT + HOME_PLATE_HEIGHT)) / (prevPosX - currPosX);
@@ -180,8 +178,10 @@ const PitchPathModel = ({ index, posX, posY, posZ }) => {
         timeElapsed -= timeDelta * (1 - ratio);
 
         const dataCopy = {...data};
-        data['pitchDatas'][index]['horizontalBreak'] = Math.round((currPosZ - posZ) * 1000 / 2.54) / 10;
-        data['pitchDatas'][index]['verticalBreak'] = Math.round((currPosY - posY) * 1000 / 2.54) / 10;
+        const normalEndPosZ = posZ + HOME_PLATE_REAR_TO_RELEASE_POINT * Math.sin(releaseAngleX) * -1;
+        const normalEndPosY = posY + HOME_PLATE_REAR_TO_RELEASE_POINT * Math.sin(releaseAngleY);
+        data['pitchDatas'][index]['horizontalBreak'] = Math.round((currPosZ - normalEndPosZ) * 1000 / 2.54) / 10;
+        data['pitchDatas'][index]['verticalBreak'] = Math.round((currPosY - normalEndPosY) * 1000 / 2.54) / 10;
         data['pitchDatas'][index]['hitterReactionTIme'] = Math.round((timeElapsed - 0.2) * 1000) / 1000;
         data['pitchDatas'][index]['rating'] = 'TBD';
 
@@ -224,11 +224,11 @@ const PitchPathModel = ({ index, posX, posY, posZ }) => {
 };
 
 const getXYZComponents = (magnitude, xAngle, yAngle) => {
-    const xzPlaneProjection = magnitude * Math.cos(yAngle * Math.PI / 180);
-    const yzPlaneProjection = magnitude * Math.cos(xAngle * Math.PI / 180);
-    const xComponent = xzPlaneProjection * Math.sin(xAngle * Math.PI / 180);
-    const yComponent = yzPlaneProjection * Math.sin(yAngle * Math.PI / 180);
-    const zComponent = xzPlaneProjection * Math.cos(xAngle * Math.PI / 180);
+    const xzPlaneProjection = magnitude * Math.cos(yAngle);
+    const yzPlaneProjection = magnitude * Math.cos(xAngle);
+    const xComponent = xzPlaneProjection * Math.sin(xAngle);
+    const yComponent = yzPlaneProjection * Math.sin(yAngle);
+    const zComponent = xzPlaneProjection * Math.cos(xAngle);
     return [xComponent, yComponent, zComponent];
 };
 
