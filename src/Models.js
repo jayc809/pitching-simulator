@@ -183,7 +183,6 @@ const PitchPathModel = ({ index, posX, posY, posZ }) => {
         data['pitchDatas'][index]['horizontalBreak'] = Math.round((currPosZ - normalEndPosZ) * 1000 / 2.54) / 10;
         data['pitchDatas'][index]['verticalBreak'] = Math.round((currPosY - normalEndPosY) * 1000 / 2.54) / 10;
         data['pitchDatas'][index]['hitterReactionTIme'] = Math.round((timeElapsed - 0.2) * 1000) / 1000;
-        data['pitchDatas'][index]['rating'] = 'TBD';
 
         dataCopy['pitchDataChanged'] = -2;
         setData(dataCopy);

@@ -34,7 +34,6 @@ const ModelCanvas = () => {
                 <h5 style={{margin: '5px'}}>{`Horizontal Break: ${data['pitchDatas'][showPitchAnnotation[0]]['horizontalBreak']} inches`}</h5>
                 <h5 style={{margin: '5px'}}>{`Veritcal Break: ${data['pitchDatas'][showPitchAnnotation[0]]['verticalBreak']} inches`}</h5>
                 <h5 style={{margin: '5px'}}>{`Hitter Reaction Time: ${data['pitchDatas'][showPitchAnnotation[0]]['hitterReactionTIme']} seconds`}</h5>
-                <h5 style={{margin: '5px'}}>{`Rating (STF+): ${data['pitchDatas'][showPitchAnnotation[0]]['rating']}`}</h5>
             </div> :
             <></>
         }
