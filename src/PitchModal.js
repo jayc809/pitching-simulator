@@ -51,7 +51,7 @@ const PitchModal = ({ index }) => {
 
     const onMouseEnter = () => {
         const dataCopy = {...data};
-        dataCopy['pitchDataChanged'] = index;
+        dataCopy['pitchDataChanged'] = -2;
         dataCopy['pitchDataSelected'] = index;
         setData(dataCopy);
     }
