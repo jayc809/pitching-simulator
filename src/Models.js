@@ -198,10 +198,17 @@ const PitchPathModel = ({ index, posX, posY, posZ, animationData }) => {
     }, [data, index, posX, posY, posZ]);
 
     const onPointerEnter = (e) => {
+        const dataCopy = {...data};
+        dataCopy['pitchDataChanged'] = -2;
+        dataCopy['pitchDataSelected'] = index;
+        setData(dataCopy);
         setShowPitchAnnotation([index, e.x, e.y]);
     }
 
     const onPointerLeave = () => {
+        const dataCopy = {...data};
+        dataCopy['pitchDataSelected'] = -1;
+        setData(dataCopy);
         setShowPitchAnnotation(null);
     }
 
