@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PITCH_TYPE_TO_NAME, PITCH_TYPE_TO_COLOR, PITCH_TYPE_TO_BASE_DATA } from './Constants';
 import { useDataContext } from './DataProvider';
 import spinAxisIcon from './static/spin-axis-icon.png'
@@ -7,6 +7,7 @@ import releaseAngleIcon from './static/release-angle-icon.png'
 const PitchModal = ({ index }) => {
     const {data, setData} = useDataContext();
     const pitchData = data['pitchDatas'][index];
+    const [pitchTypeKey, setPitchTypeKey] = useState(0);
 
     useEffect(() => {
         if (data['pitchDatas'][index]['isDefault']) {
@@ -62,6 +63,10 @@ const PitchModal = ({ index }) => {
         setData(dataCopy);
     }
 
+    useEffect(() => {
+        setPitchTypeKey(pitchTypeKey + 1);
+    }, [data])
+
     return (
         <div id={`pitch-modal-${index}`} style={{width: '100%'}} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
             {
@@ -91,7 +96,7 @@ const PitchModal = ({ index }) => {
                             <h5>{PITCH_TYPE_TO_NAME[pitchData['pitchType']]}</h5>
                         </td>
                         <td>
-                            <select onChange={onPitchTypeChange} defaultValue={data['pitchDatas'][index]['pitchType']}>
+                            <select key={pitchTypeKey} onChange={onPitchTypeChange} defaultValue={data['pitchDatas'][index]['pitchType']}>
                                 <option value='4SB'>4SB</option>
                                 <option value='2SB'>2SB</option>
                                 <option value='CUT'>CUT</option>

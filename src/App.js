@@ -1,6 +1,6 @@
 import DataProvider from "./DataProvider";
 import ModelViewer from "./ModelViewer";
-import Controls from "./Controls";
+import Controller from "./Controller";
 import './App.css';
 
 function App() {
@@ -11,7 +11,7 @@ function App() {
           <ModelViewer/>
         </div>
         <div style={{height: '100vh', width: '20vw'}}>
-          <Controls/>
+          <Controller/>
         </div>
       </div>
     </DataProvider>

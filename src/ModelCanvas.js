@@ -9,7 +9,10 @@ const ModelCanvas = ({ cameraOffsetX, cameraOffsetY, target, animationData }) =>
     const {data} = useDataContext();
 
     useFrame(({ clock }) => {
-        if (!animationData.current['playAnimation']) return;
+        if (!(
+            animationData.current['playAnimation'] || 
+            (animationData.current['initialLoad'] && animationData.current['initialPathsReady'] === data['pitchDatas'].length)
+        )) return;
         
         const currTime = clock.getElapsedTime();
         const totalPaths = data['pitchDatas'].length;
@@ -26,6 +29,8 @@ const ModelCanvas = ({ cameraOffsetX, cameraOffsetY, target, animationData }) =>
 
         for (let i = 0; i < totalPaths; i++) {
             const [pathMeshRef, ballMeshRef, animationRangeEnd, totalTime, endPosX, endPosY, endPosZ] = animationData.current[`pitch${i}`];
+            
+            if (pathMeshRef.current === null || ballMeshRef.current === null) continue;
             if (animationRangeEnd.current === ANIMATION_RANGE_MAX) continue;
             const timeElapsed = currTime - animationData.current['startClockTime'];
             
@@ -34,8 +39,8 @@ const ModelCanvas = ({ cameraOffsetX, cameraOffsetY, target, animationData }) =>
             pathMeshRef.current.geometry.setDrawRange(0, animationRangeEnd.current);
             const positionArray = pathMeshRef.current.geometry.attributes.position.array;
             let currPosIndex;
-            if (frameCount < ANIMATION_FRAMES) {
-                currPosIndex = Math.round((positionArray.length / 3 - 1) * frameCount / ANIMATION_FRAMES) * 3;
+            if (frameCount <= ANIMATION_FRAMES) {
+                currPosIndex = positionArray.length / (ANIMATION_FRAMES + 1) * frameCount;
                 ballMeshRef.current.position.x = positionArray[currPosIndex];
                 ballMeshRef.current.position.y = positionArray[currPosIndex + 1];
                 ballMeshRef.current.position.z = positionArray[currPosIndex + 2] - BASEBALL_RADIUS * 0.8;
@@ -53,6 +58,7 @@ const ModelCanvas = ({ cameraOffsetX, cameraOffsetY, target, animationData }) =>
         if (animationData.current['pathsCompleted'] === totalPaths) {
             animationData.current['playAnimation'] = false;
             animationData.current['ready'] = false;
+            animationData.current['initialLoad'] = false;
         }
         
     })

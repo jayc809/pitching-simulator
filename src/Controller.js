@@ -3,7 +3,7 @@ import { useDataContext } from './DataProvider';
 import PitchModal from './PitchModal';
 import { PITCH_TYPE_TO_BASE_DATA } from './Constants';
 
-const Controls = () => {
+const Controller = () => {
     const {data, setData} = useDataContext();
 
     const onAddPitchClick = () => {
@@ -35,4 +35,4 @@ const Controls = () => {
     );
 };
 
-export default Controls;
+export default Controller;

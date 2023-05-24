@@ -189,6 +189,9 @@ const PitchPathModel = ({ index, posX, posY, posZ, animationData }) => {
         setData(dataCopy);
         
         animationData.current[`pitch${index}`] = [pathMeshRef, ballMeshRef, animationRangeEnd, timeElapsed, currPosX, currPosY, currPosZ];
+        if (animationData.current['initialLoad']) {
+            animationData.current['initialPathsReady'] += 1;
+        }
 
         setBallPos([currPosX, currPosY, currPosZ]);
         setPathCurve(new THREE.CatmullRomCurve3(pathPoints));

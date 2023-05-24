@@ -13,7 +13,8 @@ const ModelViewer = () => {
     const target = [HOME_PLATE_REAR_TO_MOUND_REAR * 0.0283 * -1, STRIKE_ZONE_HEIGHT * 0.01, 0];
     const [resetCamera, setResetCamera] = useState(0);
     const [showHelp, setShowHelp] = useState(false);
-    const animationData = useRef({playAnimation: false, pathsCompleted: 0, startClockTime: null, ready: false});
+    const [canPlayAnimation, setCanPlayAnimation] = useState(true);
+    const animationData = useRef({playAnimation: false, pathsCompleted: 0, startClockTime: null, ready: false, initialLoad: true, initialPathsReady: 0});
 
     const onResetCamera = () => {
         setResetCamera(resetCamera + 1);
@@ -24,6 +25,10 @@ const ModelViewer = () => {
 
     const onPlayAnimation = () => {
         animationData.current['playAnimation'] = true;
+        setCanPlayAnimation(false);
+        setTimeout(() => {
+            setCanPlayAnimation(true);
+        }, 1000);
     }
 
     return (<>
@@ -55,7 +60,7 @@ const ModelViewer = () => {
         <div style={{width: '80vw', position: 'absolute', zIndex: 100, right: '20vw', boxSizing: 'border-box', padding: '20px 0', display: 'flex', justifyContent: 'end'}}>
             <button onMouseEnter={() => {setShowHelp(true)}} onMouseLeave={() => {setShowHelp(false)}} style={{color: 'white', backgroundColor: 'black', border: '1px solid white', borderRadius: '1000px', padding: '0 14px', fontSize: '18px', marginLeft: '20px'}}>?</button> 
             <button onClick={onResetCamera} style={{color: 'white', backgroundColor: 'black', border: '1px solid white', borderRadius: '5px', padding: '10px', marginLeft: '20px'}}>Reset Camera</button> 
-            <button onClick={onPlayAnimation} style={{color: 'white', backgroundColor: 'black', border: '1px solid white', borderRadius: '5px', padding: '10px', marginLeft: '20px'}}>Play Animation</button>
+            <button onClick={onPlayAnimation} disabled={!canPlayAnimation} style={{color: canPlayAnimation ? 'white' : 'grey', backgroundColor: 'black', border: canPlayAnimation ? '1px solid white' : '1px solid grey', borderRadius: '5px', padding: '10px', marginLeft: '20px'}}>Play Animation</button>
         </div>
         <Canvas key={resetCamera} style={{height: '100%', width: '100%', backgroundColor: 'black', cursor: 'crosshair'}} camera={{fov: 50, position: cameraPosition}}>
             <ModelCanvas cameraOffsetX={cameraOffsetX} cameraOffsetY={cameraOffsetY} target={target} animationData={animationData}/>
