@@ -27,6 +27,9 @@ export const AIR_DENSITY = 1.3;
 export const AIR_DRAG_COEFFICIENT = 0.3401;
 export const AIR_RESISTANCE_CONSTANT = AIR_DENSITY * AIR_DRAG_COEFFICIENT * BASEBALL_CROSS_SECTION / 2;
 export const RADIANS_PER_SECOND_TO_RPM = 0.10472;
+export const ANIMATION_RANGE_MAX = 1440;
+export const ANIMATION_RANGE_STEP = 48;
+export const ANIMATION_FRAMES = 30;
 
 export const PITCH_TYPE_TO_NAME = {
     '4SB': '4-Seam Fastball',

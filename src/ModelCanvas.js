@@ -1,93 +1,97 @@
-import React, { useState } from 'react';
-import { Canvas } from '@react-three/fiber'
+import React from 'react';
+import { useFrame } from '@react-three/fiber'
 import { OrbitControls, Edges } from '@react-three/drei'
 import { StrikeZoneModel, HomePlateModel, MoundModel, PitchPathModel } from './Models';
-import { HOME_PLATE_REAR_TO_MOUND_REAR, HOME_PLATE_HEIGHT, GROUND_OFFSET, TOTAL_HEIGHT, STRIKE_ZONE_HEIGHT, STRIKE_ZONE_BOTTOM_TO_GROUND, HOME_PLATE_THICKNESS, MOUND_LENGTH, MOUND_REAR_HEIGHT, HOME_PLATE_REAR_TO_RELEASE_POINT, RELEASE_HEIGHT, PITCH_TYPE_TO_NAME } from './Constants'
+import { HOME_PLATE_REAR_TO_MOUND_REAR, HOME_PLATE_HEIGHT, GROUND_OFFSET, TOTAL_HEIGHT, STRIKE_ZONE_HEIGHT, STRIKE_ZONE_BOTTOM_TO_GROUND, HOME_PLATE_THICKNESS, MOUND_LENGTH, MOUND_REAR_HEIGHT, HOME_PLATE_REAR_TO_RELEASE_POINT, RELEASE_HEIGHT, ANIMATION_RANGE_MAX, ANIMATION_RANGE_STEP, ANIMATION_FRAMES, BASEBALL_RADIUS } from './Constants'
 import { useDataContext } from './DataProvider';
 
-const ModelCanvas = () => {
-    const {data, setData, showPitchAnnotation} = useDataContext();
-    
-    const cameraPosition = [HOME_PLATE_REAR_TO_MOUND_REAR * 0.17 * -1, STRIKE_ZONE_HEIGHT * 0.4, HOME_PLATE_REAR_TO_MOUND_REAR * 0.1];
-    const cameraOffsetX = HOME_PLATE_REAR_TO_MOUND_REAR * 0.4;
-    const cameraOffsetY = STRIKE_ZONE_HEIGHT * 0.2;
-    const target = [HOME_PLATE_REAR_TO_MOUND_REAR * 0.0283 * -1, STRIKE_ZONE_HEIGHT * 0.01, 0];
-    const [resetCamera, setResetCamera] = useState(0);
-    const [showHelp, setShowHelp] = useState(false);
+const ModelCanvas = ({ cameraOffsetX, cameraOffsetY, target, animationData }) => {
+    const {data} = useDataContext();
 
-    const onResetCamera = () => {
-        setResetCamera(resetCamera + 1);
-        const dataCopy = {...data};
-        dataCopy['pitchDataChanged'] = -1;
-        setData(dataCopy);
-    };
+    useFrame(({ clock }) => {
+        if (!animationData.current['playAnimation']) return;
+        
+        const currTime = clock.getElapsedTime();
+        const totalPaths = data['pitchDatas'].length;
+
+        if (!animationData.current['ready']) {
+            animationData.current['startClockTime'] = currTime;
+            animationData.current['pathsCompleted'] = 0;
+            for (let i = 0; i < totalPaths; i++) {
+                const animationRangeEnd = animationData.current[`pitch${i}`][2];
+                animationRangeEnd.current = 0;
+            }
+            animationData.current['ready'] = true;
+        }
+
+        for (let i = 0; i < totalPaths; i++) {
+            const [pathMeshRef, ballMeshRef, animationRangeEnd, totalTime, endPosX, endPosY, endPosZ] = animationData.current[`pitch${i}`];
+            if (animationRangeEnd.current === ANIMATION_RANGE_MAX) continue;
+            const timeElapsed = currTime - animationData.current['startClockTime'];
+            
+            const frameCount = Math.min(Math.round(timeElapsed / totalTime * ANIMATION_FRAMES), ANIMATION_FRAMES)
+            animationRangeEnd.current = frameCount * ANIMATION_RANGE_STEP;
+            pathMeshRef.current.geometry.setDrawRange(0, animationRangeEnd.current);
+            const positionArray = pathMeshRef.current.geometry.attributes.position.array;
+            let currPosIndex;
+            if (frameCount < ANIMATION_FRAMES) {
+                currPosIndex = Math.round((positionArray.length / 3 - 1) * frameCount / ANIMATION_FRAMES) * 3;
+                ballMeshRef.current.position.x = positionArray[currPosIndex];
+                ballMeshRef.current.position.y = positionArray[currPosIndex + 1];
+                ballMeshRef.current.position.z = positionArray[currPosIndex + 2] - BASEBALL_RADIUS * 0.8;
+            } else {
+                ballMeshRef.current.position.x = endPosX;
+                ballMeshRef.current.position.y = endPosY;
+                ballMeshRef.current.position.z = endPosZ;
+            }
+            
+            if (animationRangeEnd.current === ANIMATION_RANGE_MAX) {
+                animationData.current['pathsCompleted'] += 1;
+            }
+        }
+
+        if (animationData.current['pathsCompleted'] === totalPaths) {
+            animationData.current['playAnimation'] = false;
+            animationData.current['ready'] = false;
+        }
+        
+    })
 
     return (<>
+        <OrbitControls enableDamping={false} target={target}/>
+        <ambientLight intensity={1}/>
+        <StrikeZoneModel 
+            posX={HOME_PLATE_REAR_TO_MOUND_REAR / 2 * -1 + HOME_PLATE_HEIGHT + cameraOffsetX} 
+            posY={GROUND_OFFSET + STRIKE_ZONE_HEIGHT / 2 + STRIKE_ZONE_BOTTOM_TO_GROUND + cameraOffsetY} 
+            posZ={0}
+        />
+        <HomePlateModel 
+            posX={HOME_PLATE_REAR_TO_MOUND_REAR / 2 * -1 + HOME_PLATE_HEIGHT / 2 + cameraOffsetX} 
+            posY={GROUND_OFFSET + HOME_PLATE_THICKNESS / 2 + cameraOffsetY} 
+            posZ={0}
+        />
+        <MoundModel
+            posX={HOME_PLATE_REAR_TO_MOUND_REAR / 2 - MOUND_LENGTH / 2 + cameraOffsetX}
+            posY={GROUND_OFFSET + MOUND_REAR_HEIGHT / 2}
+            posZ={0}
+        />
         {
-            showPitchAnnotation !== null ? 
-            <div style={{height: '33vh', width: '20vw', position: 'absolute', left: `calc(${showPitchAnnotation[1]}px - 20vw / 2)`, top: `calc(${showPitchAnnotation[2]}px - 33vh - 30px)`, zIndex: 110, border: '1px solid white', backgroundColor: 'black', boxSizing: 'border-box', padding: '10px', display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
-                <h3 style={{margin: '5px'}}>{`Pitch ${showPitchAnnotation[0] + 1}`}</h3>
-                <h5 style={{margin: '5px'}}>{`Pitch Type: ${PITCH_TYPE_TO_NAME[data['pitchDatas'][showPitchAnnotation[0]]['pitchType']]}`}</h5>
-                <h5 style={{margin: '5px'}}>{`Velocity: ${data['pitchDatas'][showPitchAnnotation[0]]['velocity']} mph`}</h5>
-                <h5 style={{margin: '5px'}}>{`Spin Rate: ${data['pitchDatas'][showPitchAnnotation[0]]['spinRate']} rpm`}</h5>
-                <h5 style={{margin: '5px'}}>{`Spin Axis: ${data['pitchDatas'][showPitchAnnotation[0]]['spinAxis']}°`}</h5>
-                <h5 style={{margin: '5px'}}>{`Horizontal Break: ${data['pitchDatas'][showPitchAnnotation[0]]['horizontalBreak']} inches`}</h5>
-                <h5 style={{margin: '5px'}}>{`Veritcal Break: ${data['pitchDatas'][showPitchAnnotation[0]]['verticalBreak']} inches`}</h5>
-                <h5 style={{margin: '5px'}}>{`Hitter Reaction Time: ${data['pitchDatas'][showPitchAnnotation[0]]['hitterReactionTIme']} seconds`}</h5>
-            </div> :
-            <></>
+            data['pitchDatas'].map((_, index) => {return(
+                <PitchPathModel
+                    key={index}
+                    index={index}
+                    posX={HOME_PLATE_REAR_TO_MOUND_REAR / 2 * -1 + HOME_PLATE_REAR_TO_RELEASE_POINT + cameraOffsetX}
+                    posY={GROUND_OFFSET + RELEASE_HEIGHT}
+                    posZ={0}
+                    animationData={animationData}
+                />
+            );})
         }
-        {
-            showHelp ? 
-            <div style={{width: '25vw', height: '25vh', position: 'absolute', left: '30vw', top: '40vh', zIndex: 110, border: '1px solid white', backgroundColor: 'black', boxSizing: 'border-box', padding: '10px', display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
-                <h5 style={{margin: '5px'}}>Pan: one finger hold and drag</h5>
-                <h5 style={{margin: '5px'}}>Move: two finger hold and drag</h5>
-                <h5 style={{margin: '5px'}}>Zoom: two finger pinch or scroll</h5>
-                <h5 style={{margin: '5px'}}>Adjust sliders: hold and drag or click and use arrow keys</h5>
-                <h5 style={{margin: '5px'}}>* Model is based on a 6-foot, right-handed pitcher * </h5>
-            </div> :
-            <></>
-        }
-        <div style={{width: '80vw', position: 'absolute', zIndex: 100, right: '20vw', boxSizing: 'border-box', padding: '20px 0', display: 'flex', justifyContent: 'end'}}>
-            <button onMouseEnter={() => {setShowHelp(true)}} onMouseLeave={() => {setShowHelp(false)}} style={{color: 'white', backgroundColor: 'black', border: '1px solid white', borderRadius: '1000px', padding: '0 14px', fontSize: '18px', marginLeft: '20px'}}>?</button> 
-            <button onClick={onResetCamera} style={{color: 'white', backgroundColor: 'black', border: '1px solid white', borderRadius: '5px', padding: '10px', marginLeft: '20px'}}>Reset Camera</button> 
-            <button style={{color: 'white', backgroundColor: 'black', border: '1px solid white', borderRadius: '5px', padding: '10px', marginLeft: '20px'}}>Play Animation</button>
-        </div>
-        <Canvas key={resetCamera} style={{height: '100%', width: '100%', backgroundColor: 'black', cursor: 'crosshair'}} camera={{fov: 50, position: cameraPosition}}>
-            <OrbitControls enableDamping={false} target={target}/>
-            <ambientLight intensity={1}/>
-            <StrikeZoneModel 
-                posX={HOME_PLATE_REAR_TO_MOUND_REAR / 2 * -1 + HOME_PLATE_HEIGHT + cameraOffsetX} 
-                posY={GROUND_OFFSET + STRIKE_ZONE_HEIGHT / 2 + STRIKE_ZONE_BOTTOM_TO_GROUND + cameraOffsetY} 
-                posZ={0}
-            />
-            <HomePlateModel 
-                posX={HOME_PLATE_REAR_TO_MOUND_REAR / 2 * -1 + HOME_PLATE_HEIGHT / 2 + cameraOffsetX} 
-                posY={GROUND_OFFSET + HOME_PLATE_THICKNESS / 2 + cameraOffsetY} 
-                posZ={0}
-            />
-            <MoundModel
-                posX={HOME_PLATE_REAR_TO_MOUND_REAR / 2 - MOUND_LENGTH / 2 + cameraOffsetX}
-                posY={GROUND_OFFSET + MOUND_REAR_HEIGHT / 2}
-                posZ={0}
-            />
-            {
-                data['pitchDatas'].map((pitchData, index) => {return(
-                    <PitchPathModel
-                        key={index}
-                        index={index}
-                        posX={HOME_PLATE_REAR_TO_MOUND_REAR / 2 * -1 + HOME_PLATE_REAR_TO_RELEASE_POINT + cameraOffsetX}
-                        posY={GROUND_OFFSET + RELEASE_HEIGHT}
-                        posZ={0}
-                    />
-                );})
-            }
-            <mesh position={[0 + cameraOffsetX, 0 + cameraOffsetY - GROUND_OFFSET / 4, 0]}>
-                <boxGeometry args={[HOME_PLATE_REAR_TO_MOUND_REAR, TOTAL_HEIGHT * 1.25, TOTAL_HEIGHT]}/>
-                <meshPhongMaterial opacity={0} transparent={true} depthWrite={false}/>
-                <Edges color={'white'} />
-            </mesh>
-        </Canvas>
+        <mesh position={[0 + cameraOffsetX, 0 + cameraOffsetY - GROUND_OFFSET / 4, 0]}>
+            <boxGeometry args={[HOME_PLATE_REAR_TO_MOUND_REAR, TOTAL_HEIGHT * 1.25, TOTAL_HEIGHT]}/>
+            <meshPhongMaterial opacity={0} transparent={true} depthWrite={false}/>
+            <Edges color={'white'} />
+        </mesh>
     </>);
 };
 

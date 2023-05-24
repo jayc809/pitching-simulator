@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Edges } from '@react-three/drei';
-import { HOME_PLATE_HEIGHT, HOME_PLATE_RECTANGLE_HEIGHT, HOME_PLATE_THICKNESS, HOME_PLATE_WIDTH, PITCHERS_PLATE_TO_MOUND_REAR_FRONT, MOUND_LENGTH, MOUND_REAR_HEIGHT, MOUND_REAR_LENGTH, MOUND_REAR_WIDTH, PITCHERS_PLATE_HEIGHT, PITCHERS_PLATE_THICKNESS, PITCHERS_PLATE_WIDTH, STRIKE_ZONE_HEIGHT, STRIKE_ZONE_THICKNESS, HOME_PLATE_REAR_TO_RELEASE_POINT, BASEBALL_RADIUS, GRAVITY_ACCELERATION, PITCH_TYPE_TO_COLOR, AIR_RESISTANCE_CONSTANT, BASEBALL_MASS, RADIANS_PER_SECOND_TO_RPM, AIR_DENSITY, BASEBALL_CROSS_SECTION, PITCH_TYPE_TO_MAGNUS_EFFECT_FACTOR } from './Constants';
+import { HOME_PLATE_HEIGHT, HOME_PLATE_RECTANGLE_HEIGHT, HOME_PLATE_THICKNESS, HOME_PLATE_WIDTH, PITCHERS_PLATE_TO_MOUND_REAR_FRONT, MOUND_LENGTH, MOUND_REAR_HEIGHT, MOUND_REAR_LENGTH, MOUND_REAR_WIDTH, PITCHERS_PLATE_HEIGHT, PITCHERS_PLATE_THICKNESS, PITCHERS_PLATE_WIDTH, STRIKE_ZONE_HEIGHT, STRIKE_ZONE_THICKNESS, HOME_PLATE_REAR_TO_RELEASE_POINT, BASEBALL_RADIUS, GRAVITY_ACCELERATION, PITCH_TYPE_TO_COLOR, AIR_RESISTANCE_CONSTANT, BASEBALL_MASS, RADIANS_PER_SECOND_TO_RPM, AIR_DENSITY, BASEBALL_CROSS_SECTION, PITCH_TYPE_TO_MAGNUS_EFFECT_FACTOR, ANIMATION_FRAMES } from './Constants';
 import * as THREE from 'three';
 import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 import { useDataContext } from './DataProvider';
@@ -104,10 +104,13 @@ const MoundModel = ({ posX, posY, posZ }) => {
     </>);
 };
 
-const PitchPathModel = ({ index, posX, posY, posZ }) => {
+const PitchPathModel = ({ index, posX, posY, posZ, animationData }) => {
     const {data, setData, setShowPitchAnnotation} = useDataContext();
-    const [endPos, setEndPos] = useState([]);
     const [pathCurve, setPathCurve] = useState(null);
+    const [ballPos, setBallPos] = useState([0, 0, 0]);
+    const pathMeshRef = useRef(null);
+    const ballMeshRef = useRef(null);
+    const animationRangeEnd = useRef(0);
 
     useEffect(() => {
         if (data['pitchDataChanged'] !== index && data['pitchDataChanged'] !== -1) return;
@@ -128,9 +131,7 @@ const PitchPathModel = ({ index, posX, posY, posZ }) => {
         let currVelocityZ = initialVelocityZ * -1;
         let timeElapsed = 0;
         const timeDelta = 0.01;
-        let prevPosX = null;
-        let prevPosY = null;
-        let prevPosZ = null;
+        let prevPosX, prevPosY, prevPosZ;
         
         let loopCounter = 0;
         while (currPosX > posX - HOME_PLATE_REAR_TO_RELEASE_POINT + HOME_PLATE_HEIGHT) {
@@ -182,12 +183,14 @@ const PitchPathModel = ({ index, posX, posY, posZ }) => {
         const normalEndPosY = posY + HOME_PLATE_REAR_TO_RELEASE_POINT * Math.sin(releaseAngleY);
         data['pitchDatas'][index]['horizontalBreak'] = Math.round((currPosZ - normalEndPosZ) * 1000 / 2.54) / 10;
         data['pitchDatas'][index]['verticalBreak'] = Math.round((currPosY - normalEndPosY) * 1000 / 2.54) / 10;
-        data['pitchDatas'][index]['hitterReactionTIme'] = Math.round((timeElapsed - 0.2) * 1000) / 1000;
+        data['pitchDatas'][index]['hitterReactionTime'] = Math.round((timeElapsed - 0.2) * 1000) / 1000;
 
         dataCopy['pitchDataChanged'] = -2;
         setData(dataCopy);
+        
+        animationData.current[`pitch${index}`] = [pathMeshRef, ballMeshRef, animationRangeEnd, timeElapsed, currPosX, currPosY, currPosZ];
 
-        setEndPos([currPosX, currPosY, currPosZ]);
+        setBallPos([currPosX, currPosY, currPosZ]);
         setPathCurve(new THREE.CatmullRomCurve3(pathPoints));
     }, [data, index, posX, posY, posZ]);
 
@@ -203,11 +206,11 @@ const PitchPathModel = ({ index, posX, posY, posZ }) => {
         return (<></>);
     }
     return (<>
-        <mesh onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
-            <tubeGeometry args={[pathCurve, 64, BASEBALL_RADIUS * 0.8, 20, false]}/>
+        <mesh ref={pathMeshRef} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
+            <tubeGeometry args={[pathCurve, ANIMATION_FRAMES, BASEBALL_RADIUS * 0.8, 8, false]}/>
             <meshPhongMaterial color={PITCH_TYPE_TO_COLOR[data['pitchDatas'][index]['pitchType']]} opacity={data['pitchDataSelected'] === index ? 1 : 0.5} transparent={true} depthWrite={false}/>
         </mesh>
-        <mesh position={endPos} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
+        <mesh ref={ballMeshRef} position={ballPos} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
             <sphereGeometry args={[BASEBALL_RADIUS]}/>
             <meshPhongMaterial color={'white'}/>
         </mesh>

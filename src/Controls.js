@@ -7,6 +7,7 @@ const Controls = () => {
     const {data, setData} = useDataContext();
 
     const onAddPitchClick = () => {
+        if (data['pitchDatas'].length === 10) return;
         const dataCopy = {...data};
         dataCopy['pitchDatas'].push({...PITCH_TYPE_TO_BASE_DATA['4SB'], isDefault: false});
         dataCopy['pitchDataChanged'] = dataCopy['pitchDatas'].length - 1;
